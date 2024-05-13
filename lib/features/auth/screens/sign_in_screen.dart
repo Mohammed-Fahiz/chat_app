@@ -159,11 +159,17 @@ class _PhonePassLoginScreenState extends ConsumerState<SignInScreen> {
 
   Future<void> verifyPhonePass() async {
     if (emailController.text.trim().isNotEmpty) {
-      if (passController.text.trim().isNotEmpty &&
-          passController.text.trim().length >= 6) {
+      if (passController.text.trim().isNotEmpty) {
+        await ref
+            .read(authControllerProvider.notifier)
+            .signInWithEmailAndPassword(
+              email: emailController.text.trim(),
+              password: passController.text.trim(),
+              context: context,
+            );
       } else {
         showSnackBar(
-            content: "Enter a valid password, at least 6 characters",
+            content: "Enter a valid password",
             context: context,
             color: Palette.snackBarErrorColor);
       }

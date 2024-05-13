@@ -7,9 +7,7 @@ import '../../utilities/custom_snackBar.dart';
 final imageUrlProvider = StateProvider<String?>((ref) => null);
 
 final imageStorageController = NotifierProvider<ImageStorageController, bool>(
-  () {
-    return ImageStorageController();
-  },
+  () => ImageStorageController(),
 );
 
 class ImageStorageController extends Notifier<bool> {

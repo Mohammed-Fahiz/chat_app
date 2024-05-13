@@ -46,7 +46,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   Widget build(BuildContext context) {
     double h = MediaQuery.of(context).size.height;
     double w = MediaQuery.of(context).size.width;
-    final isLoading = ref.watch(isLoadingProvider);
+    final isLoading = ref.watch(authControllerProvider);
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -250,6 +250,15 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         userImage: "",
         fcmToken: ref.read(fcmTokenProvider).toString(),
       );
+
+      await ref
+          .read(authControllerProvider.notifier)
+          .signUpWithEmailAndPassword(
+            password: passwordController.text.trim(),
+            userModel: userModel,
+            context: context,
+            imageFile: ref.read(pickedImageProvider),
+          );
     }
   }
 }
