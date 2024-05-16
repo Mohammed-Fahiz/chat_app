@@ -105,4 +105,15 @@ class AuthRepository {
       return left(Failure(errMSg: e.toString()));
     }
   }
+
+  FutureVoid logOut() async {
+    try {
+      await SharedPreferences.getInstance().then((prefs) async {
+        await prefs.remove("userId");
+      });
+      return right(null);
+    } catch (e) {
+      return left(Failure(errMSg: e.toString()));
+    }
+  }
 }

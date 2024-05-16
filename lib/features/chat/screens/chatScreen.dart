@@ -19,16 +19,17 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../../core/theme/theme.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
-  final String chatPhoneNumber;
-  final String chatUserType;
+  final String chatUserId;
   final String chatUserName;
+  final String chatUserImage;
+  final String chatUserPhone;
 
-  const ChatScreen({
-    Key? key,
-    required this.chatPhoneNumber,
-    required this.chatUserType,
-    required this.chatUserName,
-  }) : super(key: key);
+  const ChatScreen(
+      {super.key,
+      required this.chatUserId,
+      required this.chatUserName,
+      required this.chatUserImage,
+      required this.chatUserPhone});
 
   @override
   ConsumerState<ChatScreen> createState() => _SmithChatScreenState();
@@ -39,9 +40,13 @@ class _SmithChatScreenState extends ConsumerState<ChatScreen> {
   final ScrollController _scrollController = ScrollController();
   final attachmentProvider = StateProvider<XFile?>((ref) => null);
   final chatLimitProvider = StateProvider<int>((ref) => 7);
+  late String senderId;
+  late String receiverId;
 
   @override
   void initState() {
+    senderId = ref.read(userProvider)!.userId!;
+    receiverId = widget.chatUserId;
     super.initState();
   }
 
@@ -64,7 +69,7 @@ class _SmithChatScreenState extends ConsumerState<ChatScreen> {
         centerTitle: false,
         elevation: 0,
         title: Text(
-          "${widget.chatUserType} : ${widget.chatUserName}",
+          widget.chatUserName,
           style: TextStyle(
               fontWeight: FontWeight.w600,
               fontFamily: 'Urbanist',
@@ -88,36 +93,34 @@ class _SmithChatScreenState extends ConsumerState<ChatScreen> {
                     final limit = ref.watch(chatLimitProvider);
                     Map paramMap = {
                       "limit": limit,
-                      "phoneNo": widget.chatPhoneNumber,
+                      "chatDocId": ChatCommonFunctions.getChatDocId(
+                        senderId: senderId,
+                        receiverId: receiverId,
+                      ),
                     };
 
                     return ref
                         .watch(getChatStreamProvider(jsonEncode(paramMap)))
                         .when(
                           data: (chatList) {
-                            String previousTopic = "";
                             return ListView.builder(
                               itemCount: chatList.length,
                               reverse: true,
                               itemBuilder: (context, index) {
                                 final message = chatList[index];
-                                String topic = "";
 
-                                if (previousTopic != message.topic) {
-                                  topic = message.topic;
-
-                                  previousTopic = message.topic;
-                                }
                                 markAsRead(chatMessageModel: message);
 
                                 return _buildMessage(
-                                    message: message, topic: topic, w: w, h: h);
+                                    message: message, w: w, h: h);
                               },
                             );
                           },
-                          error: (error, stackTrace) => ErrorText(
-                            errorText: error.toString(),
-                          ),
+                          error: (error, stackTrace) {
+                            return ErrorText(
+                              errorText: error.toString(),
+                            );
+                          },
                           loading: () => const Loader(),
                         );
                   },
@@ -135,70 +138,29 @@ class _SmithChatScreenState extends ConsumerState<ChatScreen> {
 
   Widget _buildMessage(
       {required ChatMessageModel message,
-      required String topic,
       required double h,
       required double w}) {
     String messageType = message.messageType;
     final user = ref.read(userProvider)!;
 
     if (messageType == 'textMessage') {
-      if (message.sender == user.userPhoneNo) {
+      if (message.senderId == senderId) {
         return SendMessageCard(message: message);
       } else {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (topic != "")
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(w * 0.02),
-                  color: Palette.primaryColor,
-                ),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                      horizontal: w * 0.03, vertical: h * 0.005),
-                  child: Text(
-                    topic,
-                    style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'Urbanist',
-                        fontSize: w * 0.031,
-                        color: Colors.white),
-                  ),
-                ),
-              ),
             ReplyCard(message: message),
           ],
         );
       }
     } else if (messageType == "imageMessage") {
-      if (message.sender == user.userPhoneNo) {
+      if (message.senderId == senderId) {
         return SendImageWidget(message: message);
       } else {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (topic != "")
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(w * 0.02),
-                  color: Palette.primaryColor,
-                ),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: w * 0.03,
-                    vertical: h * 0.005,
-                  ),
-                  child: Text(
-                    topic,
-                    style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'Urbanist',
-                        fontSize: w * 0.031,
-                        color: Colors.white),
-                  ),
-                ),
-              ),
             ReplyImageWidget(message: message),
           ],
         );
@@ -234,28 +196,29 @@ class _SmithChatScreenState extends ConsumerState<ChatScreen> {
     _textController.clear();
     final attachment = ref.read(attachmentProvider);
     final user = ref.read(userProvider)!;
+
     ChatMessageModel? finalMessageModel;
 
     ChatMessageModel chatMessageModel = ChatMessageModel(
-      //TO WHO
-      id: "",
-      userId: user.userPhoneNo,
-      userName: user.name,
-      userPhone: user.userPhoneNo,
+      msgId: "",
+      chatDocId: ChatCommonFunctions.getChatDocId(
+        senderId: senderId,
+        receiverId: receiverId,
+      ),
+      receiverName: widget.chatUserName,
+      receiverImage: widget.chatUserImage,
+      receiverPhone: widget.chatUserPhone,
+      senderId: senderId,
+      senderName: user.name,
+      senderPhone: user.userPhoneNo,
       messageType: "",
       textMessage: "",
       imageMessage: "",
       isRead: false,
       sendTime: Timestamp.now(),
-      topic: "",
-      orderNo: "",
-      orderDetailNo: "",
-      designCodeId: "",
-      designCode: "",
-      sender: user.userPhoneNo,
-      userImage: user.userImage ?? "",
-      receiver: widget.chatPhoneNumber,
-      userType: widget.chatUserType,
+      sender: senderId,
+      senderImage: user.userImage ?? "",
+      receiver: receiverId,
       fcmToken: ref.read(fcmTokenProvider).toString(),
     );
 
@@ -296,7 +259,10 @@ class _SmithChatScreenState extends ConsumerState<ChatScreen> {
       final limit = ref.read(chatLimitProvider);
       Map paramMap = {
         "limit": limit,
-        "phoneNo": widget.chatPhoneNumber,
+        "chatDocId": ChatCommonFunctions.getChatDocId(
+          senderId: senderId,
+          receiverId: receiverId,
+        ),
       };
 
       ref.refresh(getChatStreamProvider(jsonEncode(paramMap)));

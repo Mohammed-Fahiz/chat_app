@@ -20,16 +20,26 @@ class ChatRepository {
     try {
       await FirebaseFirestore.instance
           .collection("chats")
-          .doc(chatMessageModel.receiver)
-          .update({"adminFcmToken": chatMessageModel.fcmToken}).then(
-              (value) async {
+          .doc(chatMessageModel.chatDocId)
+          .set({
+        "docId": chatMessageModel.chatDocId,
+        "sendTime": FieldValue.serverTimestamp(),
+        "senderName": chatMessageModel.senderName,
+        "senderId": chatMessageModel.senderId,
+        "receiverId": chatMessageModel.receiver,
+        "senderPhone": chatMessageModel.senderPhone,
+        "senderImage": chatMessageModel.senderImage,
+        "receiverName": chatMessageModel.receiverName,
+        "receiverImage": chatMessageModel.receiverImage,
+        "receiverPhone": chatMessageModel.receiverPhone
+      }).then((value) async {
         await FirebaseFirestore.instance
             .collection("chats")
-            .doc(chatMessageModel.receiver)
+            .doc(chatMessageModel.chatDocId)
             .collection("messages")
             .add(chatMessageModel.toMap())
             .then((value) async {
-          await value.update({"id": value.id});
+          await value.update({"msgId": value.id});
         });
       });
 
@@ -45,24 +55,25 @@ class ChatRepository {
     try {
       await FirebaseFirestore.instance
           .collection("chats")
-          .doc(chatMessageModel.sender)
+          .doc(chatMessageModel.chatDocId)
           .collection("messages")
-          .doc(chatMessageModel.id)
+          .doc(chatMessageModel.msgId)
           .update({"isRead": true});
 
       return right(null);
     } catch (e) {
-      print(e);
       return left(Failure(errMSg: e.toString()));
     }
   }
 
   Stream<List<ChatMessageModel>> getChatStream(
-      {required String userPhoneNo, required int limit}) {
+      {required String chatDocId, required int limit}) {
+    print(chatDocId);
+    print("CHAT DOC CHAT STREAM");
     DateTime sevenDaysAgo = DateTime.now().subtract(Duration(days: limit));
     return FirebaseFirestore.instance
         .collection("chats")
-        .doc(userPhoneNo)
+        .doc(chatDocId)
         .collection("messages")
         .where("sendTime", isGreaterThan: sevenDaysAgo)
         .orderBy("sendTime", descending: true)
@@ -72,23 +83,18 @@ class ChatRepository {
     });
   }
 
-  Stream<List<Map<String, dynamic>>> getChatTileStream() {
+  Stream<List<Map<String, dynamic>>> getChatTileStream(
+      {required String userId}) {
     return FirebaseFirestore.instance
         .collection("chats")
-        .where("userType", isEqualTo: "admin")
+        .where(
+          Filter.or(
+            Filter('senderId', isEqualTo: userId),
+            Filter('receiverId', isEqualTo: userId),
+          ),
+        )
         .orderBy("sendTime", descending: true)
         .snapshots()
         .map((event) => event.docs.map((e) => e.data()).toList());
-  }
-
-  Stream<int> getChatTileCount({required String userPhoneNo}) {
-    return FirebaseFirestore.instance
-        .collection("chats")
-        .doc(userPhoneNo)
-        .collection("messages")
-        .where("sender", isEqualTo: userPhoneNo)
-        .where("isRead", isEqualTo: false)
-        .snapshots()
-        .map((event) => event.size);
   }
 }

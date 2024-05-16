@@ -1,5 +1,6 @@
 import 'package:chat_app/core/theme/theme.dart';
 import 'package:chat_app/features/auth/screens/sign_in_screen.dart';
+import 'package:chat_app/features/auth/screens/splash_screen.dart';
 import 'package:chat_app/features/chat/screens/chatTileScreen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -27,7 +28,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: Palette.lightModeAppTheme,
-      home: const SignInScreen(),
+      home: const SplashScreen(),
     );
   }
 }

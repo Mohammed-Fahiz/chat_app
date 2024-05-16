@@ -3,6 +3,7 @@ import 'package:chat_app/core/navigation_service.dart';
 import 'package:chat_app/core/theme/theme.dart';
 import 'package:chat_app/core/utilities/custom_snackBar.dart';
 import 'package:chat_app/features/auth/repository/auth_repository.dart';
+import 'package:chat_app/features/auth/screens/sign_in_screen.dart';
 import 'package:chat_app/features/chat/screens/chatTileScreen.dart';
 import 'package:chat_app/models/userModel.dart';
 import 'package:flutter/cupertino.dart';
@@ -143,5 +144,21 @@ class AuthController extends Notifier<bool> {
             context: context,
             color: Palette.snackBarErrorColor),
         (r) => null);
+  }
+
+  Future<void> logOut({required BuildContext context}) async {
+    final res = await ref.read(authRepositoryProvider).logOut();
+    res.fold(
+      (l) => showSnackBar(
+          content: l.errMSg,
+          context: context,
+          color: Palette.snackBarErrorColor),
+      (r) {
+        return NavigationService.navigateRemoveUntil(
+          context: context,
+          screen: const SignInScreen(),
+        );
+      },
+    );
   }
 }

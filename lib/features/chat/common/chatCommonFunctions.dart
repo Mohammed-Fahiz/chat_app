@@ -154,4 +154,11 @@ class ChatCommonFunctions {
       },
     );
   }
+
+  static String getChatDocId(
+      {required String senderId, required String receiverId}) {
+    return senderId.compareTo(receiverId) < 0
+        ? '$senderId _ $receiverId'
+        : '$receiverId _ $senderId';
+  }
 }

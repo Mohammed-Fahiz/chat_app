@@ -17,23 +17,16 @@ final getChatStreamProvider =
     StreamProvider.family<List<ChatMessageModel>, String>((ref, params) {
   final decodedParams = jsonDecode(params);
   return ref.read(chatControllerProvider.notifier).getChatStream(
-        userPhoneNo: decodedParams["userPhoneNo"],
+        chatDocId: decodedParams["chatDocId"],
         limit: decodedParams["limit"],
       );
 });
 
 final getChatTileStream =
     StreamProvider.family<List<Map<String, dynamic>>, String>((ref, params) {
-  final decodedParams = jsonDecode(params);
-  return ref.read(chatControllerProvider.notifier).getChatTileStream();
-});
-
-final getChatTileCountStreamProvider =
-    StreamProvider.family<int, String>((ref, params) {
-  final decodedParams = jsonDecode(params);
   return ref
       .read(chatControllerProvider.notifier)
-      .getChatTileCount(userPhoneNo: params);
+      .getChatTileStream(userId: params);
 });
 
 class ChatController extends Notifier<bool> {
@@ -55,7 +48,7 @@ class ChatController extends Notifier<bool> {
             context: context,
             folderName: "ChatImages",
             fileName:
-                "${chatMessageModel.userPhone}-${DateTime.now().microsecondsSinceEpoch}",
+                "${chatMessageModel.senderPhone}-${DateTime.now().microsecondsSinceEpoch}",
           );
 
       currentChatMessage = currentChatMessage.copyWith(
@@ -89,19 +82,14 @@ class ChatController extends Notifier<bool> {
   }
 
   Stream<List<ChatMessageModel>> getChatStream(
-      {required String userPhoneNo, required int limit}) {
+      {required String chatDocId, required int limit}) {
     return ref
         .read(chatRepositoryProvider)
-        .getChatStream(userPhoneNo: userPhoneNo, limit: limit);
+        .getChatStream(chatDocId: chatDocId, limit: limit);
   }
 
-  Stream<List<Map<String, dynamic>>> getChatTileStream() {
-    return ref.read(chatRepositoryProvider).getChatTileStream();
-  }
-
-  Stream<int> getChatTileCount({required String userPhoneNo}) {
-    return ref
-        .read(chatRepositoryProvider)
-        .getChatTileCount(userPhoneNo: userPhoneNo);
+  Stream<List<Map<String, dynamic>>> getChatTileStream(
+      {required String userId}) {
+    return ref.read(chatRepositoryProvider).getChatTileStream(userId: userId);
   }
 }
