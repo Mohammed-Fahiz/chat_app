@@ -50,6 +50,7 @@ dependencies:
   firebase_messaging: ^14.9.2
   flash: ^3.1.0
   shared_preferences: ^2.2.3
+  flutter_sound: ^9.4.10
 
 dev_dependencies:
   flutter_test:

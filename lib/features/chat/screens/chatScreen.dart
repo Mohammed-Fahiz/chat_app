@@ -5,6 +5,7 @@ import 'package:chat_app/core/utilities/loader.dart';
 import 'package:chat_app/features/auth/controller/auth_controller.dart';
 import 'package:chat_app/features/chat/common/chatCommonFunctions.dart';
 import 'package:chat_app/features/chat/controller/chatController.dart';
+import 'package:chat_app/features/chat/widgets/audioCard.dart';
 import 'package:chat_app/features/chat/widgets/messageInputWidget.dart';
 import 'package:chat_app/features/chat/widgets/replyCard.dart';
 import 'package:chat_app/features/chat/widgets/replyImage.dart';
@@ -54,6 +55,7 @@ class _SmithChatScreenState extends ConsumerState<ChatScreen> {
   void dispose() {
     _textController.dispose();
     _scrollController.dispose();
+
     super.dispose();
   }
 
@@ -165,6 +167,11 @@ class _SmithChatScreenState extends ConsumerState<ChatScreen> {
           ],
         );
       }
+    } else if (messageType == "audioMessage") {
+      return AudioMessage(
+        message: message,
+        isSender: message.senderId == senderId ? true : false,
+      );
     }
     return Container();
   }
