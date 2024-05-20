@@ -52,6 +52,7 @@ dependencies:
   shared_preferences: ^2.2.3
   flutter_sound: ^9.4.10
 
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

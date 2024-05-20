@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:chat_app/core/error_handling/failure.dart';
 import 'package:chat_app/core/error_handling/type_defs.dart';
 import 'package:chat_app/models/chatMessageModel.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
 import 'package:fpdart/fpdart.dart';
 
 final chatRepositoryProvider = Provider<ChatRepository>((ref) {
@@ -96,5 +100,22 @@ class ChatRepository {
         .orderBy("sendTime", descending: true)
         .snapshots()
         .map((event) => event.docs.map((e) => e.data()).toList());
+  }
+
+  FutureEither<String> uploadAudio({required String audioFilePath}) async {
+    try {
+      final file = File(audioFilePath);
+      final fileName = p.basename(audioFilePath);
+      final ref = FirebaseStorage.instance.ref().child('audio/$fileName');
+
+      final uploadTask = ref.putFile(file);
+
+      final snapshot = await uploadTask.whenComplete(() => null);
+      final url = await snapshot.ref.getDownloadURL();
+
+      return right(url);
+    } catch (e) {
+      return left(Failure(errMSg: e.toString()));
+    }
   }
 }

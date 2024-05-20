@@ -1,5 +1,8 @@
 import 'package:chat_app/core/theme/theme.dart';
 import 'package:chat_app/features/chat/services/audio_services.dart';
+import 'package:chat_app/features/chat/widgets/audioCard.dart';
+import 'package:chat_app/features/chat/widgets/recordedAudioCard.dart';
+import 'package:chat_app/features/chat/widgets/recordingWidget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_sound/flutter_sound.dart';
@@ -22,9 +25,9 @@ class MessageInputWidget extends ConsumerStatefulWidget {
 
 class _MessageInputWidgetState extends ConsumerState<MessageInputWidget> {
   final FlutterSoundRecorder recorder = FlutterSoundRecorder();
-  final FlutterSoundPlayer player = FlutterSoundPlayer();
+
   final isRecordingProvider = StateProvider<bool>((ref) => false);
-  final isPlayingProvider = StateProvider<bool>((ref) => false);
+
   final isAudioExistsProvider = StateProvider<bool>((ref) => false);
   String? audioFilePath;
 
@@ -41,7 +44,7 @@ class _MessageInputWidgetState extends ConsumerState<MessageInputWidget> {
   @override
   void dispose() {
     AudioServices.stopRecording(recorder: recorder);
-    AudioServices.stopPlaying(player: player);
+
     AudioServices.clearAudio(audioFilePath: audioFilePath!);
     super.dispose();
   }
@@ -61,81 +64,107 @@ class _MessageInputWidgetState extends ConsumerState<MessageInputWidget> {
           return Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              GestureDetector(
-                onTap: () async => await record(isRecording: isRecording),
-                child: CircleAvatar(
-                  radius: w * 0.06,
-                  backgroundColor: Palette.primaryColor,
-                  child: Icon(
-                    !isRecording ? Icons.keyboard_voice_sharp : Icons.close,
-                    size: w * 0.05,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              SizedBox(width: w * 0.01),
-              !isAudioExists
-                  ? Container(
-                      height: h * 0.06,
-                      width: w * 0.69,
-                      decoration: BoxDecoration(
-                          border:
-                              Border.all(color: Colors.black, width: w * 0.001),
-                          borderRadius: BorderRadius.circular(w * 0.06)),
-                      child: Row(
-                        children: [
-                          SizedBox(width: w * 0.01),
-                          Container(
-                            height: h * 0.045,
-                            width: h * 0.045,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
+              isRecording
+                  ? const Expanded(
+                      child: RecordingAnimationWidget(isRecording: true))
+                  : !isAudioExists
+                      ? Container(
+                          height: h * 0.06,
+                          width: w * 0.69,
+                          decoration: BoxDecoration(
                               border: Border.all(
                                   color: Colors.black, width: w * 0.001),
-                            ),
-                            child: IconButton(
-                              onPressed: () => widget.attachment(),
-                              icon: Icon(
-                                Icons.attach_file,
-                                size: w * 0.05,
+                              borderRadius: BorderRadius.circular(w * 0.06)),
+                          child: Row(
+                            children: [
+                              SizedBox(width: w * 0.01),
+                              Container(
+                                height: h * 0.045,
+                                width: h * 0.045,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                      color: Colors.black, width: w * 0.001),
+                                ),
+                                child: IconButton(
+                                  onPressed: () => widget.attachment(),
+                                  icon: Icon(
+                                    Icons.attach_file,
+                                    size: w * 0.05,
+                                  ),
+                                ),
                               ),
-                            ),
+                              SizedBox(width: w * 0.01),
+                              Expanded(
+                                child: TextFormField(
+                                  controller: widget.textEditingController,
+                                  decoration: const InputDecoration(
+                                      border: InputBorder.none,
+                                      hintText: "Type here....",
+                                      enabledBorder: InputBorder.none,
+                                      focusedBorder: InputBorder.none),
+                                ),
+                              ),
+                              SizedBox(width: w * 0.01),
+                            ],
                           ),
-                          SizedBox(width: w * 0.01),
-                          Expanded(
-                            child: TextFormField(
-                              controller: widget.textEditingController,
-                              decoration: const InputDecoration(
-                                  border: InputBorder.none,
-                                  hintText: "Type here....",
-                                  enabledBorder: InputBorder.none,
-                                  focusedBorder: InputBorder.none),
-                            ),
-                          ),
-                          SizedBox(width: w * 0.01),
-                        ],
+                        )
+                      : RecordedAudioCard(
+                          audioFilePath: audioFilePath,
+                        ),
+              SizedBox(width: w * 0.02),
+              !isAudioExists
+                  ? GestureDetector(
+                      onTap: () async => await record(isRecording: isRecording),
+                      child: CircleAvatar(
+                        radius: w * 0.06,
+                        backgroundColor: Palette.primaryColor,
+                        child: Icon(
+                          !isRecording
+                              ? Icons.keyboard_voice_sharp
+                              : Icons.close,
+                          size: w * 0.05,
+                          color: Colors.white,
+                        ),
                       ),
                     )
-                  : IconButton(
-                      onPressed: () async => await AudioServices.playRecording(
-                        audioFilePath: audioFilePath,
-                        player: player,
+                  : GestureDetector(
+                      onTap: () async {
+                        await AudioServices.clearAudio(
+                                audioFilePath: audioFilePath!)
+                            .then(
+                          (value) {
+                            return ref
+                                .read(isAudioExistsProvider.notifier)
+                                .state = false;
+                          },
+                        );
+                      },
+                      child: CircleAvatar(
+                        radius: w * 0.06,
+                        backgroundColor: Palette.primaryColor,
+                        child: Icon(
+                          Icons.delete,
+                          size: w * 0.05,
+                          color: Colors.white,
+                        ),
                       ),
-                      icon: const Icon(Icons.play_arrow),
                     ),
-              SizedBox(width: w * 0.02),
-              GestureDetector(
-                onTap: () => widget.sendMessage(),
-                child: CircleAvatar(
-                  radius: w * 0.06,
-                  backgroundColor: Palette.primaryColor,
-                  child: Icon(
-                    Icons.send,
-                    size: w * 0.05,
-                    color: Colors.white,
-                  ),
-                ),
-              )
+              SizedBox(width: w * 0.01),
+              !isRecording
+                  ? GestureDetector(
+                      onTap: () => widget.sendMessage(),
+                      child: CircleAvatar(
+                        radius: w * 0.06,
+                        backgroundColor: Palette.primaryColor,
+                        child: Icon(
+                          Icons.send,
+                          size: w * 0.05,
+                          color: Colors.white,
+                        ),
+                      ),
+                    )
+                  : const SizedBox()
             ],
           );
         },

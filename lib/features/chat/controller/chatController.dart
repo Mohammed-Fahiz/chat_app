@@ -29,6 +29,10 @@ final getChatTileStream =
       .getChatTileStream(userId: params);
 });
 
+final audioUrlProvider = StateProvider<String?>((ref) {
+  return null;
+});
+
 class ChatController extends Notifier<bool> {
   @override
   bool build() {
@@ -38,10 +42,23 @@ class ChatController extends Notifier<bool> {
   Future<void> sendMessage(
       {required BuildContext context,
       required ChatMessageModel chatMessageModel,
-      required XFile? attachment}) async {
+      required XFile? attachment,
+      required String? audioFile}) async {
     ChatMessageModel currentChatMessage = chatMessageModel;
 
-    if (attachment != null) {
+    String audioUrl = "";
+
+    if (audioFile != null && audioFile != "") {
+      state = true;
+      await uploadAudio(audioFilePath: audioFile).then((value) {
+        audioUrl = ref.read(audioUrlProvider) ?? "";
+        print(audioUrl);
+        print("333333333333333");
+        currentChatMessage =
+            currentChatMessage.copyWith(audioMessage: audioUrl);
+        ref.read(audioUrlProvider.notifier).state = null;
+      });
+    } else if (attachment != null) {
       state = true;
       await ref.read(imageStorageController.notifier).uploadImageToStorage(
             imageFile: attachment,
@@ -91,5 +108,13 @@ class ChatController extends Notifier<bool> {
   Stream<List<Map<String, dynamic>>> getChatTileStream(
       {required String userId}) {
     return ref.read(chatRepositoryProvider).getChatTileStream(userId: userId);
+  }
+
+  Future<void> uploadAudio({required String audioFilePath}) async {
+    final res = await ref
+        .read(chatRepositoryProvider)
+        .uploadAudio(audioFilePath: audioFilePath);
+    res.fold(
+        (l) => null, (url) => ref.read(audioUrlProvider.notifier).state = url);
   }
 }

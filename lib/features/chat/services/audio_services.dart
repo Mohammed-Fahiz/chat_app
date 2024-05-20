@@ -7,7 +7,9 @@ import 'package:path_provider/path_provider.dart';
 class AudioServices {
   static Future<String> getAudioPath() async {
     try {
-      final appDir = await getExternalStorageDirectory();
+      final appDir = Platform.isIOS
+          ? await getApplicationDocumentsDirectory()
+          : await getExternalStorageDirectory();
       final audioFilePath = "${appDir!.path}/audio.aac";
       return audioFilePath;
     } catch (e) {
@@ -30,21 +32,6 @@ class AudioServices {
   }) async {
     await recorder.stopRecorder();
     await recorder.closeRecorder();
-  }
-
-  static Future<void> playRecording(
-      {required FlutterSoundPlayer player,
-      required String? audioFilePath}) async {
-    await player.openPlayer();
-    await player.startPlayer(
-      fromURI: audioFilePath,
-      codec: Codec.aacADTS,
-    );
-  }
-
-  static Future<void> stopPlaying({required FlutterSoundPlayer player}) async {
-    await player.stopPlayer();
-    await player.closePlayer();
   }
 
   static Future<PermissionStatus> requestPermissions() async {

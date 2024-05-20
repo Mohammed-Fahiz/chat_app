@@ -4,7 +4,6 @@ class ChatMessageModel {
   final String? msgId;
   final String chatDocId;
   final String senderId;
-
   final String senderName;
   final String receiverName;
   final String receiverPhone;
@@ -14,6 +13,7 @@ class ChatMessageModel {
   final String messageType;
   final String textMessage;
   final String imageMessage;
+  final String audioMessage;
   final bool isRead;
   final Timestamp sendTime;
 
@@ -36,6 +36,7 @@ class ChatMessageModel {
     required this.messageType,
     required this.textMessage,
     required this.imageMessage,
+    required this.audioMessage,
     required this.isRead,
     required this.sendTime,
     required this.sender,
@@ -60,6 +61,7 @@ class ChatMessageModel {
           messageType == other.messageType &&
           textMessage == other.textMessage &&
           imageMessage == other.imageMessage &&
+          audioMessage == other.audioMessage &&
           isRead == other.isRead &&
           sendTime == other.sendTime &&
           sender == other.sender &&
@@ -80,6 +82,7 @@ class ChatMessageModel {
       messageType.hashCode ^
       textMessage.hashCode ^
       imageMessage.hashCode ^
+      audioMessage.hashCode ^
       isRead.hashCode ^
       sendTime.hashCode ^
       sender.hashCode ^
@@ -101,6 +104,7 @@ class ChatMessageModel {
         ' messageType: $messageType,' +
         ' textMessage: $textMessage,' +
         ' imageMessage: $imageMessage,' +
+        ' audioMessage: $audioMessage,' +
         ' isRead: $isRead,' +
         ' sendTime: $sendTime,' +
         ' sender: $sender,' +
@@ -122,6 +126,7 @@ class ChatMessageModel {
     String? messageType,
     String? textMessage,
     String? imageMessage,
+    String? audioMessage,
     bool? isRead,
     Timestamp? sendTime,
     String? sender,
@@ -141,6 +146,7 @@ class ChatMessageModel {
       messageType: messageType ?? this.messageType,
       textMessage: textMessage ?? this.textMessage,
       imageMessage: imageMessage ?? this.imageMessage,
+      audioMessage: audioMessage ?? this.audioMessage,
       isRead: isRead ?? this.isRead,
       sendTime: sendTime ?? this.sendTime,
       sender: sender ?? this.sender,
@@ -163,6 +169,7 @@ class ChatMessageModel {
       'messageType': this.messageType,
       'textMessage': this.textMessage,
       'imageMessage': this.imageMessage,
+      'audioMessage': this.audioMessage,
       'isRead': this.isRead,
       'sendTime': this.sendTime,
       'sender': this.sender,
@@ -184,7 +191,8 @@ class ChatMessageModel {
       senderImage: map['senderImage'] as String,
       messageType: map['messageType'] as String,
       textMessage: map['textMessage'] as String,
-      imageMessage: map['imageMessage'] as String,
+      imageMessage: map['imageMessage'] ?? "",
+      audioMessage: map['audioMessage'] ?? "",
       isRead: map['isRead'] as bool,
       sendTime: map['sendTime'] as Timestamp,
       sender: map['sender'] as String,

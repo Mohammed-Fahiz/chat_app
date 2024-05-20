@@ -5,6 +5,7 @@ import 'package:chat_app/core/utilities/loader.dart';
 import 'package:chat_app/features/auth/controller/auth_controller.dart';
 import 'package:chat_app/features/chat/common/chatCommonFunctions.dart';
 import 'package:chat_app/features/chat/controller/chatController.dart';
+import 'package:chat_app/features/chat/services/audio_services.dart';
 import 'package:chat_app/features/chat/widgets/audioCard.dart';
 import 'package:chat_app/features/chat/widgets/messageInputWidget.dart';
 import 'package:chat_app/features/chat/widgets/replyCard.dart';
@@ -202,6 +203,7 @@ class _SmithChatScreenState extends ConsumerState<ChatScreen> {
 
     _textController.clear();
     final attachment = ref.read(attachmentProvider);
+
     final user = ref.read(userProvider)!;
 
     ChatMessageModel? finalMessageModel;
@@ -212,6 +214,7 @@ class _SmithChatScreenState extends ConsumerState<ChatScreen> {
         senderId: senderId,
         receiverId: receiverId,
       ),
+      audioMessage: "",
       receiverName: widget.chatUserName,
       receiverImage: widget.chatUserImage,
       receiverPhone: widget.chatUserPhone,
@@ -229,7 +232,16 @@ class _SmithChatScreenState extends ConsumerState<ChatScreen> {
       fcmToken: ref.read(fcmTokenProvider).toString(),
     );
 
-    if (attachment != null) {
+    final audioFilePath = await AudioServices.getAudioPath();
+
+    final isExists =
+        await AudioServices.checkFileExists(audioFilePath: audioFilePath);
+    if (isExists == true) {
+      finalMessageModel = chatMessageModel.copyWith(
+        textMessage: text.trim(),
+        messageType: "audioMessage",
+      );
+    } else if (attachment != null) {
       finalMessageModel = chatMessageModel.copyWith(
         textMessage: text.trim(),
         messageType: "imageMessage",
@@ -248,6 +260,7 @@ class _SmithChatScreenState extends ConsumerState<ChatScreen> {
             context: context,
             chatMessageModel: finalMessageModel,
             attachment: attachment,
+            audioFile: audioFilePath,
           )
           .then((value) {
         ref.read(attachmentProvider.notifier).state = null;
